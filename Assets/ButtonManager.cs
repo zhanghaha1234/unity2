@@ -5,7 +5,8 @@ using UnityEngine.Networking;
 using System.Collections;
 
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
+using System.IO;
+using System.Text;
 
 public class ButtonManager : MonoBehaviour
 {
@@ -14,18 +15,26 @@ public class ButtonManager : MonoBehaviour
     public Button replayButton;
     public Button overviewButton;
     private string api;
+    private string circleApi;
+    private ConfigData configData;
 
     void Start()
     {
         ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
-        api = "http://localhost:8080/";
-        string a = "http://192.168.1.4:8080/dsCloudHallService/dsCloudHallScreen/regionOverview?message=lisi";
+        // 获取应用程序的根目录
+        string appDirectory = Application.dataPath;
+        string configPath = Path.Combine(appDirectory, "../config.json");
+        string jsonContent = File.ReadAllText(configPath, Encoding.UTF8);
+        configData = JsonUtility.FromJson<ConfigData>(jsonContent);
+        api = configData.api;
+        circleApi = configData.circleApi + "notise";
 
-        playButton.onClick.AddListener(() => StartCoroutine(SendRequest(api + "play")));
-        pauseButton.onClick.AddListener(() => StartCoroutine(SendRequest(api + "pause")));
-        replayButton.onClick.AddListener(() => StartCoroutine(SendRequest(api + "replay")));
-        overviewButton.onClick.AddListener(() => StartCoroutine(SendRequest(a)));
+
+        playButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "?action=1")));
+        pauseButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "?action=2")));
+        replayButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "?action=3")));
+        overviewButton.onClick.AddListener(() => StartCoroutine(SendRequest(api + "overview?message=1")));
     }
 
     void OpenUrl(string url)

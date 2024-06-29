@@ -1,16 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System;
 using System.IO;
 using System.Text;
-using Unity.VisualScripting;
-using System.Linq;
 using System.Collections;
 using UnityEngine.Networking;
 using Debug = UnityEngine.Debug;
-using UnityEditor.PackageManager.Requests;
+using System.Net;
 
 public class ListManager : MonoBehaviour
 {
@@ -25,13 +21,23 @@ public class ListManager : MonoBehaviour
     private GridLayoutGroup gridLayoutGroup;  // GridLayoutGroup组件
 
     private string api;
-    private string yqb;
-    private ApiResponse response;
+    private string circleApi;
+    private BlockResponse blockResponse;
+    private ProjectResponse projectResponse;
+    private ConfigData configData;
+    private string selectedRegion;
 
     void Start()
     {
-        api = "http://localhost:8080/";
-        yqb = "http://192.168.1.4:8080/dsCloudHallService/dsCloudHallScreen/";
+        ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+
+        // 获取应用程序的根目录
+        string appDirectory = Application.dataPath;
+        string configPath = Path.Combine(appDirectory, "../config.json");
+        string jsonContent = File.ReadAllText(configPath, Encoding.UTF8);
+        configData = JsonUtility.FromJson<ConfigData>(jsonContent);
+        api = configData.api;
+        circleApi = configData.circleApi;
 
         //初始化模块panel的GridLayoutGroup组件
         ConfigBlockGridLayout();
@@ -40,23 +46,23 @@ public class ListManager : MonoBehaviour
         ConfigGridLayoutGroup();
 
         //初始化项目列表数据
-        StartCoroutine(GetProjectDatas());
+        StartCoroutine(InitDatas());
 
     }
 
     //获取与处理请求数据
-    IEnumerator GetProjectDatas()
+    IEnumerator InitDatas()
     {
-        string url = api + "getInitDatas";
+        string url = api + "readRegion";
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
 
-        InitResponseData(request);
+        UpdateBlockResponseData(request);
 
         //初始化区块按钮
         InitBlockButton();
 
-        // 为每个按钮添加点击事件
+        // 为每个区块按钮添加点击事件
         foreach (Transform blockButton in blockButtonPanel)
         {
             Text buttonText = blockButton.GetComponentInChildren<Text>();
@@ -85,6 +91,7 @@ public class ListManager : MonoBehaviour
         blockGridLayoutGroup.cellSize = new Vector2(110, 44);
         blockGridLayoutGroup.spacing = new Vector2(10, 10);
         blockGridLayoutGroup.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        blockGridLayoutGroup.constraintCount = 5;
     }
 
     //配置gridLayoutGroup
@@ -101,13 +108,14 @@ public class ListManager : MonoBehaviour
         gridLayoutGroup.cellSize = new Vector2(285, 30);  // 设置每个按钮的大小
         gridLayoutGroup.spacing = new Vector2(10, 10);  // 设置按钮之间的间距
         gridLayoutGroup.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        gridLayoutGroup.constraintCount = 2;  // 每行两个按钮  
+        //gridLayoutGroup.constraintCount = 2;
+
         gridLayoutGroup.padding = new RectOffset(10, 10, 10, 10);  // 设置容器内边距
 
     }
 
     //设置response数据
-    void InitResponseData(UnityWebRequest request)
+    void UpdateBlockResponseData(UnityWebRequest request)
     {
         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
@@ -121,8 +129,8 @@ public class ListManager : MonoBehaviour
             // Attempt to parse JSON
             try
             {
-                response = JsonUtility.FromJson<ApiResponse>(json);
-                Debug.Log("Parsed response: " + response);
+                blockResponse = JsonUtility.FromJson<BlockResponse>(json);
+                Debug.Log("Parsed response: " + blockResponse);
             }
             catch (System.Exception e)
             {
@@ -139,12 +147,12 @@ public class ListManager : MonoBehaviour
             Destroy(blockButton.gameObject);
         }
 
-        List<Block> buttons = response.data;
+        List<Block> buttons = blockResponse.data;
         foreach (Block block in buttons) {
             {
                 GameObject newBlockButton = Instantiate(blockButtonPrefab, blockButtonPanel);
                 Text blockButtonText = newBlockButton.transform.Find("Text").GetComponent<Text>();
-                blockButtonText.text = block.blockName;
+                blockButtonText.text = block.regionName;
                 blockButtonText.GetComponent<RectTransform>().offsetMin = new Vector2(5, 5);
 
             }
@@ -163,9 +171,72 @@ public class ListManager : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        // 获取对应按钮的数据列表
-        List<Project> projects = GetProjects(buttonText);
+        StartCoroutine(UpdateProjectList(buttonText));
 
+
+
+    }
+
+
+    IEnumerator UpdateProjectList(string buttonText)
+    {
+        ButtonRequest(api + "region?message=2");
+
+        string blockId = GetBlockIdByText(buttonText);
+        string url = api + "readProjectByRegionId/?regionId=" + blockId;
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+
+        UpdataProjectResponseData(request);
+
+        //初始化project按钮
+        InitProjectButton();
+    }
+
+    //获取区块id
+    string GetBlockIdByText(string blockName)
+    {
+        List<Block> blocks = blockResponse.data;
+        foreach (Block block in blocks)
+        {
+            if(block.regionName == blockName)
+                return block.regionId;
+        }
+        return null;
+    }
+    
+    void UpdataProjectResponseData(UnityWebRequest request)
+    {
+        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+        {
+            Debug.LogError("Error: " + request.error);
+        }
+        else
+        {
+            string json = request.downloadHandler.text;
+            Debug.Log("Received JSON: " + json);
+
+            // Attempt to parse JSON
+            try
+            {
+                projectResponse = JsonUtility.FromJson<ProjectResponse>(json);
+                Debug.Log("Parsed response: " + projectResponse);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("JSON parsing error: " + e.Message);
+            }
+        }
+    }
+
+    void InitProjectButton()
+    {
+        foreach (Transform projectButton in contentPanel)
+        {
+            Destroy(projectButton.gameObject);
+        }
+
+        List<Project> projects = projectResponse.data;
         // 动态创建按钮
         foreach (Project project in projects)
         {
@@ -173,30 +244,19 @@ public class ListManager : MonoBehaviour
             Text projectButtonText = newProjectButton.transform.Find("Text").GetComponent<Text>();
             projectButtonText.text = project.projectName;
             projectButtonText.GetComponent<RectTransform>().offsetMin = new Vector2(10, projectButtonText.GetComponent<RectTransform>().offsetMin.y);
-            newProjectButton.GetComponent<Button>().onClick.AddListener(() => OnDynamicButtonClick());
+            newProjectButton.GetComponent<Button>().onClick.AddListener(() => OnProjectButtonClick(project.projectId));
         }
-        //string complet_url = url + "block";
-        string url = yqb + "block?message=block~";
-        StartCoroutine(SendRequest(url));
 
     }
 
-    List<Project> GetProjects(string blockName)
+    void OnProjectButtonClick(string projectId)
     {
-        List<Block> blocks = response.data;
-        foreach (Block block in blocks)
-        {
-            if (block.blockName == blockName)
-                return block.projects;
-        }
-        return null;
+        string url = api + "project?message=3";
+        UnityWebRequest webRequest = UnityWebRequest.Get(url);
+        webRequest.SendWebRequest();
     }
-    
-
-
-    void OnDynamicButtonClick()
+    void ButtonRequest(string url)
     {
-        string url = yqb + "project?message=project~";
         UnityWebRequest webRequest = UnityWebRequest.Get(url);
         webRequest.SendWebRequest();
     }
