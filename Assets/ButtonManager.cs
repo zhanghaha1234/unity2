@@ -28,12 +28,12 @@ public class ButtonManager : MonoBehaviour
         string jsonContent = File.ReadAllText(configPath, Encoding.UTF8);
         configData = JsonUtility.FromJson<ConfigData>(jsonContent);
         api = configData.api;
-        circleApi = configData.circleApi + "notise";
+        circleApi = configData.circleApi;
 
 
-        playButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "?action=1")));
-        pauseButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "?action=2")));
-        replayButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "?action=3")));
+        playButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "notice?action=1")));
+        pauseButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "notice?action=2")));
+        replayButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "notice?action=3")));
         overviewButton.onClick.AddListener(() => StartCoroutine(SendRequest(api + "overview?message=1")));
     }
 
@@ -43,7 +43,7 @@ public class ButtonManager : MonoBehaviour
     }
     IEnumerator SendRequest(string url)
     {
-        UnityWebRequest request = UnityWebRequest.Get(url);
-        yield return request.SendWebRequest();
+        UnityWebRequest webRequest = UnityWebRequest.Get(url);
+        yield return webRequest.SendWebRequest();
     }
 }

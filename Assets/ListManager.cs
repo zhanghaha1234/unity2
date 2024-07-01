@@ -180,7 +180,7 @@ public class ListManager : MonoBehaviour
 
     IEnumerator UpdateProjectList(string buttonText)
     {
-        ButtonRequest(api + "region?message=2");
+        StartCoroutine(ButtonRequest(api + "region?message=2"));
 
         string blockId = GetBlockIdByText(buttonText);
         string url = api + "readProjectByRegionId/?regionId=" + blockId;
@@ -244,21 +244,21 @@ public class ListManager : MonoBehaviour
             Text projectButtonText = newProjectButton.transform.Find("Text").GetComponent<Text>();
             projectButtonText.text = project.projectName;
             projectButtonText.GetComponent<RectTransform>().offsetMin = new Vector2(10, projectButtonText.GetComponent<RectTransform>().offsetMin.y);
-            newProjectButton.GetComponent<Button>().onClick.AddListener(() => OnProjectButtonClick(project.projectId));
+            newProjectButton.GetComponent<Button>().onClick.AddListener(() => StartCoroutine(OnProjectButtonClick(project.projectId)));
         }
 
     }
 
-    void OnProjectButtonClick(string projectId)
+    IEnumerator OnProjectButtonClick(string projectId)
     {
         string url = api + "project?message=3";
         UnityWebRequest webRequest = UnityWebRequest.Get(url);
-        webRequest.SendWebRequest();
+        yield return webRequest.SendWebRequest();
     }
-    void ButtonRequest(string url)
+    IEnumerator ButtonRequest(string url)
     {
         UnityWebRequest webRequest = UnityWebRequest.Get(url);
-        webRequest.SendWebRequest();
+        yield return webRequest.SendWebRequest();
     }
 }
 
