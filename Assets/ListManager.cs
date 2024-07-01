@@ -161,7 +161,7 @@ public class ListManager : MonoBehaviour
         }
     }
 
-    //模块按钮绑定事件
+    //区块按钮绑定事件
     void OnBlockButtonClick(string buttonText)
     {
 
