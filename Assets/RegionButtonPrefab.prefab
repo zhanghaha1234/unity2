@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3218317108380727584}
   - component: {fileID: 999770167841001882}
   m_Layer: 5
-  m_Name: BlockButtonPrefab
+  m_Name: RegionButtonPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

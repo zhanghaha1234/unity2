@@ -11,18 +11,18 @@ public class Project
 }
 
 [System.Serializable]
-public class Block
+public class Region
 {
     public string regionId;
     public string regionName;
 }
 
 [System.Serializable]
-public class BlockResponse
+public class RegionResponse
 {
     public string success;
     public string message;
-    public List<Block> data;
+    public List<Region> data;
 }
 
 [System.Serializable]

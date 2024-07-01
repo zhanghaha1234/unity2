@@ -543,10 +543,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 775ebb3f88343e94db6bb718b559a54d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blockButtonPrefab: {fileID: 936809358083279918, guid: 6128c656f06e70f4bbe8608dd2aca329, type: 3}
-  blockButtonPanel: {fileID: 1256536074}
+  regionButtonPrefab: {fileID: 936809358083279918, guid: 6128c656f06e70f4bbe8608dd2aca329, type: 3}
+  regionButtonPanel: {fileID: 1256536074}
   projectButtonPrefab: {fileID: 4876048016823385586, guid: 3355bab91e9f8af4ca16885394e25642, type: 3}
-  contentPanel: {fileID: 1032384033}
+  projectButtonPanel: {fileID: 1032384033}
 --- !u!1 &422403897
 GameObject:
   m_ObjectHideFlags: 0
