@@ -37,6 +37,5 @@ public class ProjectResponse
 [System.Serializable]
 public class ConfigData
 {
-    public string circleApi;
-    public string api;
+    public string apiRootUrl;
 }

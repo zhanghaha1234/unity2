@@ -7,18 +7,18 @@ using System.Collections;
 using UnityEngine.Networking;
 using Debug = UnityEngine.Debug;
 using System.Net;
+using UnityEditor.PackageManager.Requests;
 
 public class ListManager : MonoBehaviour
 {
 
     public GameObject regionButtonPrefab;
-    public RectTransform regionButtonPanel;  // 按钮面板
+    public RectTransform regionButtonPanel;  
     private GridLayoutGroup regionGridLayoutGroup;
 
-    public GameObject projectButtonPrefab;  // 预制体按钮
-    public RectTransform projectButtonPanel;  // 用于动态生成按钮的面板
-
-    private GridLayoutGroup projectGridLayoutGroup;  // GridLayoutGroup组件
+    public GameObject projectButtonPrefab;  
+    public RectTransform projectButtonPanel;  
+    private GridLayoutGroup projectGridLayoutGroup;
 
     private string api;
     private string circleApi;
@@ -36,8 +36,8 @@ public class ListManager : MonoBehaviour
         string configPath = Path.Combine(appDirectory, "../config.json");
         string jsonContent = File.ReadAllText(configPath, Encoding.UTF8);
         configData = JsonUtility.FromJson<ConfigData>(jsonContent);
-        api = configData.api;
-        circleApi = configData.circleApi;
+        api = configData.apiRootUrl + "/dsCloudHallService/dsCloudHallScreen/";
+        circleApi = configData.apiRootUrl + "/dsCloudHallService/circularScreen/";
 
         //初始化模块panel的GridLayoutGroup组件
         ConfigRegionGridLayout();
@@ -45,8 +45,11 @@ public class ListManager : MonoBehaviour
         // 初始化GridLayoutGroup组件
         ConfigGridLayoutGroup();
 
+
+
         //初始化项目列表数据
         StartCoroutine(InitDatas());
+        InitEmptyRegions();
 
     }
 
@@ -60,16 +63,21 @@ public class ListManager : MonoBehaviour
         UpdateRegionResponseData(request);
 
         //初始化区块按钮
-        InitRegionButton();
+        if (regionResponse != null)
+        {
+            InitRegionButton();
+        }
 
         // 为每个区块按钮添加点击事件
         foreach (Transform regionButton in regionButtonPanel)
         {
             Text regionText = regionButton.GetComponentInChildren<Text>();
-            regionButton.GetComponent<Button>().onClick.AddListener(() => OnRegionButtonClick(regionText.text));
+            string regionId = GetBlockIdByText(regionText.text);
+            regionButton.GetComponent<Button>().onClick.AddListener(() => OnRegionButtonClick(regionId));
         }
-        regionButtonPanel.GetChild(0).GetComponent<Button>().Select();
-        regionButtonPanel.GetChild(0).GetComponent<Button>().onClick.Invoke();
+        regionButtonPanel.GetChild(5).GetComponent<Button>().Select();
+        regionButtonPanel.GetChild(5).GetComponent<Button>().onClick.Invoke();
+        //OnRegionButtonClick("1");
     }
 
     //请求发送
@@ -120,6 +128,8 @@ public class ListManager : MonoBehaviour
         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
             Debug.LogError("Error: " + request.error);
+            ErrorMessage.Instance.ThrowErrorMessage("区块数据请求失败");
+            ErrorMessage.Instance.LogException(request.error);
         }
         else
         {
@@ -135,6 +145,12 @@ public class ListManager : MonoBehaviour
             catch (System.Exception e)
             {
                 Debug.LogError("JSON parsing error: " + e.Message);
+                if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    Debug.LogError("Error: " + request.error);
+                    ErrorMessage.Instance.ThrowErrorMessage("区块数据解析失败");
+                    ErrorMessage.Instance.LogException(request.error);
+                }
             }
         }
     }
@@ -162,7 +178,7 @@ public class ListManager : MonoBehaviour
     }
 
     //区块按钮绑定事件
-    void OnRegionButtonClick(string buttonText)
+    void OnRegionButtonClick(string regionId)
     {
 
         // 清空ContentPanel中的现有按钮
@@ -170,20 +186,18 @@ public class ListManager : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-
-        StartCoroutine(UpdateProjectList(buttonText));
+        StartCoroutine(UpdateProjectList(regionId));
 
 
 
     }
 
-
-    IEnumerator UpdateProjectList(string buttonText)
+    //更新项目列表
+    IEnumerator UpdateProjectList(string regionId)
     {
         StartCoroutine(ButtonRequest(api + "region?message=2"));
 
-        string blockId = GetBlockIdByText(buttonText);
-        string url = api + "readProjectByRegionId?regionId=" + blockId;
+        string url = api + "readProjectByRegionId?regionId=" + regionId;
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
 
@@ -210,6 +224,9 @@ public class ListManager : MonoBehaviour
         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
             Debug.LogError("Error: " + request.error);
+            ErrorMessage.Instance.ThrowErrorMessage("项目数据请求失败");
+            ErrorMessage.Instance.LogException(request.error);
+
         }
         else
         {
@@ -225,6 +242,8 @@ public class ListManager : MonoBehaviour
             catch (System.Exception e)
             {
                 Debug.LogError("JSON parsing error: " + e.Message);
+                ErrorMessage.Instance.ThrowErrorMessage("项目数据解析失败");
+                ErrorMessage.Instance.LogException(request.error);
             }
         }
     }
@@ -252,13 +271,35 @@ public class ListManager : MonoBehaviour
     IEnumerator OnProjectButtonClick(string projectId)
     {
         string url = api + "project?message=3";
-        UnityWebRequest webRequest = UnityWebRequest.Get(url);
-        yield return webRequest.SendWebRequest();
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+        {
+            Debug.LogError("Error: " + request.error);
+            ErrorMessage.Instance.ThrowErrorMessage("区块数据请求失败");
+            ErrorMessage.Instance.LogException(request.error);
+        }
     }
     IEnumerator ButtonRequest(string url)
     {
-        UnityWebRequest webRequest = UnityWebRequest.Get(url);
-        yield return webRequest.SendWebRequest();
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+        {
+            Debug.LogError("Error: " + request.error);
+            ErrorMessage.Instance.ThrowErrorMessage("区块数据请求失败");
+            ErrorMessage.Instance.LogException(request.error);
+        }
+    }
+
+    void InitEmptyRegions()
+    {
+        for (int i = 0; i < 5; i += 1)
+        {
+            GameObject regionButton = Instantiate(regionButtonPrefab, regionButtonPanel);
+            Text text = regionButton.transform.Find("Text").GetComponent<Text>();
+            text.text = null;
+        }
     }
 }
 

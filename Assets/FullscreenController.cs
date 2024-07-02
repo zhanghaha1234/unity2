@@ -2,15 +2,33 @@ using UnityEngine;
 
 public class FullscreenController : MonoBehaviour
 {
+    private void Start()
+    {
+        Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
+    }
+
     void Update()
     {
-        // 检查用户是否按下了ESC键
+        // 检测是否按下了Esc键
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // 切换屏幕显示模式
-            Screen.fullScreen = !Screen.fullScreen;
+            // 切换全屏状态
+            ToggleFullscreen();
+        }
+    }
 
-            // 如果你想在退出全屏时也关闭游戏，可以在这里添加Application.Quit();
+    void ToggleFullscreen()
+    {
+        // 检查当前的全屏模式
+        if (Screen.fullScreenMode == FullScreenMode.Windowed)
+        {
+            // 切换到全屏模式
+            Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
+        }
+        else
+        {
+            // 切换到窗口模式
+            Screen.fullScreenMode = FullScreenMode.Windowed;
         }
     }
 }

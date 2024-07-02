@@ -7,6 +7,7 @@ using System.Collections;
 using System.Net;
 using System.IO;
 using System.Text;
+using UnityEditor.PackageManager.Requests;
 
 public class ButtonManager : MonoBehaviour
 {
@@ -27,8 +28,8 @@ public class ButtonManager : MonoBehaviour
         string configPath = Path.Combine(appDirectory, "../config.json");
         string jsonContent = File.ReadAllText(configPath, Encoding.UTF8);
         configData = JsonUtility.FromJson<ConfigData>(jsonContent);
-        api = configData.api;
-        circleApi = configData.circleApi;
+        api = configData.apiRootUrl + "/dsCloudHallService/dsCloudHallScreen/";
+        circleApi = configData.apiRootUrl + "/dsCloudHallService/circularScreen/";
 
 
         playButton.onClick.AddListener(() => StartCoroutine(SendRequest(circleApi + "notice?action=1")));
@@ -37,13 +38,15 @@ public class ButtonManager : MonoBehaviour
         overviewButton.onClick.AddListener(() => StartCoroutine(SendRequest(api + "overview?message=1")));
     }
 
-    void OpenUrl(string url)
-    {
-        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-    }
     IEnumerator SendRequest(string url)
     {
-        UnityWebRequest webRequest = UnityWebRequest.Get(url);
-        yield return webRequest.SendWebRequest();
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+        {
+            UnityEngine.Debug.LogError("Error: " + request.error);
+            ErrorMessage.Instance.ThrowErrorMessage("«Î«Û ß∞‹");
+            ErrorMessage.Instance.LogException(request.error);
+        }
     }
 }
