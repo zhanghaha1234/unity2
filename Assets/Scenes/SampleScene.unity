@@ -566,7 +566,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   overview: {fileID: 1120983052}
   RegionPanel: {fileID: 1008315000}
-  selectedSprite: {fileID: 0}
   region1: {fileID: 1241655026}
   region2: {fileID: 630629612}
   region3: {fileID: 1186579903}
@@ -575,8 +574,6 @@ MonoBehaviour:
   scrollRect: {fileID: 1905045502}
   projectContainer: {fileID: 1203433485}
   projectPrefab: {fileID: 7709812484649843020, guid: 5b88bc4e54ee8a34f84bc3521a13da97, type: 3}
-  defaultFont: {fileID: 12800000, guid: 785555022d114dd44b136265265f59a6, type: 3}
-  backupFont: {fileID: 12800000, guid: 7e6337215492c14459fbdad50f56bb16, type: 3}
 --- !u!1 &379738483
 GameObject:
   m_ObjectHideFlags: 0
@@ -2266,8 +2263,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1566897135}
   - {fileID: 265303195}
+  - {fileID: 1525554051}
   m_Father: {fileID: 786792786}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2499,7 +2496,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2508,10 +2505,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 30
     m_FontStyle: 1
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 2
     m_MaxSize: 40
     m_Alignment: 4
     m_AlignByGeometry: 0
@@ -2963,8 +2960,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 17.6, y: 398.8}
-  m_SizeDelta: {x: 197.6021, y: 50.8919}
+  m_AnchoredPosition: {x: 2.2302, y: 398.8}
+  m_SizeDelta: {x: 239.2446, y: 50.8919}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1513314553
 MonoBehaviour:
@@ -2979,7 +2976,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_EffectColor: {r: 0.57254905, g: 0.9372549, b: 1, a: 0.5}
-  m_EffectDistance: {x: 1, y: -1}
+  m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
 --- !u!114 &1513314554
 MonoBehaviour:
@@ -3019,7 +3016,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1513314550}
   m_CullTransparentMesh: 1
---- !u!1 &1566897134
+--- !u!1 &1525554049
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3027,47 +3024,43 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1566897135}
-  - component: {fileID: 1566897136}
-  m_Layer: 5
+  - component: {fileID: 1525554051}
+  - component: {fileID: 1525554050}
+  m_Layer: 0
   m_Name: Error Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &1566897135
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1566897134}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1166414357}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1566897136
+--- !u!114 &1525554050
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1566897134}
+  m_GameObject: {fileID: 1525554049}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 263eb2a5851e4f842b85e1075264d571, type: 3}
+  m_Script: {fileID: 11500000, guid: 90ef6c21b43c15e47b4731bd7f61c69b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  errorComponent: {fileID: 1513314550}
+  errorMessageComponent: {fileID: 1513314550}
+--- !u!4 &1525554051
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1525554049}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -960, y: -540, z: 0}
+  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1166414357}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1604217285
 GameObject:
   m_ObjectHideFlags: 0

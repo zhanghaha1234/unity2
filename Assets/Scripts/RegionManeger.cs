@@ -1,16 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
-//using UnityEngine.UIElements;
 
 public class RegionManeger : MonoBehaviour
 {
     public Toggle overview;
     public RectTransform RegionPanel;
-    public Sprite selectedSprite;
     public Toggle region1;
     public Toggle region2;
     public Toggle region3;
@@ -21,43 +18,45 @@ public class RegionManeger : MonoBehaviour
     public Transform projectContainer;
     public Toggle projectPrefab;
 
-    public Font defaultFont; // 默认字体，包含所有字符
-    public Font backupFont;  // 备用字体，用于显示默认字体无法显示的字符
-
     private string url;
     private string circleUrl;
     private RegionResponse regionResponse;
+    private ProjectResponse projectResponse;
     private bool isOverView;
+    private bool isRegion;
 
     private MyServices myservice = new MyServices();
+    private RequestHandler requestHandler = new RequestHandler();
+
     private List<Region> regions;
     private List<Project> projects;
-    private List<string> circleTip = new List<string>() { "overview", "yysbsqly", "pdjcnc", "lcgkq", "xysdqk", "shng" };
-
-    // Start is called before the first frame update
+ 
     void Start()
     {
+        overview.onValueChanged.AddListener(OverviewChangedd);
         url = myservice.GetURL();
         circleUrl = myservice.GetCircleURL();
-
-        overview.onValueChanged.AddListener(OverviewChangedd);
         InitRegionAndProject();
-
-
     }
 
+    /*
+     * 初始化区块和项目内容
+     */
     void InitRegionAndProject()
     {
-        StartCoroutine(OverviewSelected());
+        StartCoroutine(GetRegionsAndProjects());
     }
 
+    /*
+     * 点击总览按钮绑定事件
+     */
     void OverviewChangedd(bool isOn)
     {
         if (isOn)
         {
             if (!isOverView)
             {
-                StartCoroutine(OverviewSelected());
+                StartCoroutine(GetRegionsAndProjects());
             }
             SimpleRequest(circleUrl + "notice?videoKey=overview");
             SimpleRequest(url + "dsCloudHallScreen/overview?eventType=1&bid");
@@ -68,46 +67,61 @@ public class RegionManeger : MonoBehaviour
         }
     }
 
-    IEnumerator OverviewSelected()
+    /*
+     * 获取总览的区块和项目内容
+     */
+    IEnumerator GetRegionsAndProjects()
     {
-        string requestPath1 = url + "region/readRegion";
-        UnityWebRequest request1 = UnityWebRequest.Get(requestPath1);
-        yield return request1.SendWebRequest();
-        regions = myservice.GetRegions(request1);
+        string regionRequestPath = url + "region/readRegion";
+        UnityWebRequest regionRequest = UnityWebRequest.Get(regionRequestPath);
+        yield return regionRequest.SendWebRequest();
+        string regionRequestData = requestHandler.GetRequestText(regionRequest);
+        regionResponse = JsonUtility.FromJson<RegionResponse>(regionRequestData);
+        regions = regionResponse.data;
         InitRegionToggles(regions);
 
         string requestPath2 = url + "project/projectList?bid";
-        UnityWebRequest request2 = UnityWebRequest.Get(requestPath2);
-        yield return request2.SendWebRequest();
-        projects = myservice.GetProjectss(request2);
+        UnityWebRequest projectRequest = UnityWebRequest.Get(requestPath2);
+        yield return projectRequest.SendWebRequest();
+        string projectRequestData = requestHandler.GetRequestText(projectRequest);
+        projectResponse = JsonUtility.FromJson<ProjectResponse>(projectRequestData);
+        projects = projectResponse.data.projectVoList;
         InitProjectToggles(projects);
 
         isOverView = true;
-
     }
 
-
-    void OnRegionsClick()
+    /*
+     * 为所有区块添加点击事件
+     */
+    void AddListenerOnRegionsClick()
     {
         foreach (Transform region in RegionPanel)
         {
             Toggle regionToggle = region.GetComponent<Toggle>();
             Text regionText = region.GetComponentInChildren<Text>();
-            string regionCode = myservice.GetRegionIdByText(regionText.text);
+            string regionCode = regionResponse.GetRegionCodeByName(regionText.text);
             regionToggle.onValueChanged.AddListener(delegate { OnRegionValueChanged(regionToggle, regionCode); });
         }
     }
-    void OnProjectsClick()
+
+    /*
+     * 为所有项目添加点击事件
+     */
+    void AddListenerOnProjectsClick()
     {
         foreach (Transform project in projectContainer)
         {
             Toggle projectToggle = project.GetComponent<Toggle>();
             Text projectText = project.GetComponentInChildren<Text>();
-            string id = myservice.GetProjectIdByText(projectText.text);
+            string id = projectResponse.GetRegionCodeByName(projectText.text);
             projectToggle.onValueChanged.AddListener(delegate { OnProjectValueChanged(projectToggle, id); });
         }
     }
 
+    /*
+     * 更新区块按钮显示
+     */
     void InitRegionToggles(List<Region> regions)
     {
         Text toggleLabel;
@@ -121,32 +135,43 @@ public class RegionManeger : MonoBehaviour
         toggleLabel.text = regions[3].regionName;
         toggleLabel = region5.GetComponentInChildren<Text>();
         toggleLabel.text = regions[4].regionName;
-        OnRegionsClick();
-
+        AddListenerOnRegionsClick();
 
     }
 
-
+    /*
+     * 单个区块点击触发事件
+     */
     void OnRegionValueChanged(Toggle toggle, string regionCode)
     {
         if (toggle.isOn)
         {
-            StartCoroutine(OnRegionButtonClick(regionCode));
+            if (!isRegion)
+            {
+                StartCoroutine(GetProjectsByRegionCode(regionCode));
+            }
             SimpleRequest(circleUrl + "notice?videoKey=" + regionCode);
             SimpleRequest(url + "dsCloudHallScreen/region?eventType=2&bid=" + regionCode);
         }
+        else
+        {
+            isRegion = false;
+        }
     }
 
+    /*
+     * 更新项目按钮显示
+     */
     void InitProjectToggles(List<Project> projects)
     {
         foreach (Transform project in projectContainer)
         {
             Destroy(project.gameObject);
         }
+
         ToggleGroup toggleGroup = projectContainer.GetComponent<ToggleGroup>();
         GridLayoutGroup gridLayoutGroup = projectContainer.GetComponent<GridLayoutGroup>();
-
-        gridLayoutGroup.cellSize = new Vector2(690, 72); // 根据需要调整
+        gridLayoutGroup.cellSize = new Vector2(690, 72);
         gridLayoutGroup.spacing = new Vector2(60, 60);
         gridLayoutGroup.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayoutGroup.constraintCount = 2;
@@ -158,34 +183,34 @@ public class RegionManeger : MonoBehaviour
             projectText.text = project.projName;
             projectToggle.group = toggleGroup;
         }
-        OnProjectsClick();
+        AddListenerOnProjectsClick();
         scrollRect.verticalNormalizedPosition = 1;
     }
 
-    IEnumerator OnRegionButtonClick(string regionCode)
+    /*
+     * 获取单个区块的项目列表
+     */
+    IEnumerator GetProjectsByRegionCode(string regionCode)
     {
-        string requestPath = url + "project/projectList?bid=" + regionCode;
-        UnityWebRequest request1 = UnityWebRequest.Get(requestPath);
-        yield return request1.SendWebRequest();
-
-        projects = myservice.GetProjectss(request1);
+        string projectRequestPath = url + "project/projectList?bid=" + regionCode;
+        UnityWebRequest projectRequest = UnityWebRequest.Get(projectRequestPath);
+        yield return projectRequest.SendWebRequest();
+        string projectRequestData = requestHandler.GetRequestText(projectRequest);
+        projectResponse = JsonUtility.FromJson<ProjectResponse>(projectRequestData);
+        projects = projectResponse.data.projectVoList;
         InitProjectToggles(projects);
+        isRegion = true;
     }
 
+    /*
+     * 单个项目点击事件
+     */
     void OnProjectValueChanged(Toggle toggle, string id)
     {
         if (toggle.isOn)
         {
-            StartCoroutine(OnProjectButtonClick(id));
             SimpleRequest(url + "dsCloudHallScreen/project?eventType=3&bid=" + id);
         }
-    }
-
-    IEnumerator OnProjectButtonClick(string projectId)
-    {
-        string requestPath = url + "project?bid=" + projectId;
-        UnityWebRequest request = UnityWebRequest.Get(requestPath);
-        yield return request.SendWebRequest();
     }
 
     void SimpleRequest(string path)
@@ -197,7 +222,7 @@ public class RegionManeger : MonoBehaviour
     {
         UnityWebRequest request = UnityWebRequest.Get(path);
         yield return request.SendWebRequest();
+        requestHandler.GetRequestText(request);
     }
-
 
 }
